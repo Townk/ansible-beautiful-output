@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 # MIT License
-# 
+#
 # Copyright (c) 2019 Thiago Alves
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,7 @@ In order to use this Callback plugin, you should add this Role as a dependency
 in your project, and set the ``stdout_callback`` option on the
 :file:`ansible.cfg file::
 
-    stdout_callback = cleanstdout
+    stdout_callback = beautiful_output
 
 """
 
@@ -44,18 +44,15 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 DOCUMENTATION = """---
-    callback: cleanstdout
+    callback: beautiful_output
     type: stdout
     author: Thiago Alves <thiago@rapinialves.com>
-    short_description: a clean and condensed Ansible output
+    short_description: a clean, condensed, and beautiful Ansible output
     version_added: 2.8
     description:
       - >-
         Consolidated Ansible output in the style of LINUX/UNIX startup
         logs, and use unicode symbols to organize tasks.
-        
-        This Callback plugin is intended to be used on playbooks that you have
-        to execute "in-person".
     extends_documentation_fragment:
       - default_callback
     requirements:
@@ -158,7 +155,7 @@ def symbol(key, color=None):  # type: (str, str) -> str
 
     Args:
         key (:obj:`str`): One of the keys used to define the dictionary
-            :const:`~cleanstdout._symbol`.
+            :const:`~beautiful_output._symbol`.
         color (:obj:`str`, optional): a string representing the color that
             should be used to diplay the given symbol
     
@@ -283,20 +280,20 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
     :data:`~ansible.constants.DISPLAY_SKIPPED_HOSTS`, and it wraps lines at
     column ``80`` to make it possible to read the output on any monitor.
     
-    In addition to that, the ``cleanstdout`` plugin implements a crud version
-    of a Bus to allow other plugins to flush the output when necessary.
+    In addition to that, the ``beautiful_output`` plugin implements a crud
+    version of a Bus to allow other plugins to flush the output when necessary.
 
-    Normally, in order to hide task not executed, the ``cleanstdout`` plugin
-    will delay printing the task's title until it knows there is anything to
-    print. On certain conditions, an action plugin can output an information
+    Normally, in order to hide task not executed, the ``beautiful_output``
+    plugin will delay printing the task's title until it knows there is anything
+    to print. On certain conditions, an action plugin can output an information
     to the user, and without the Bus mechanism, the action plugin output would
     show up before the task title is printed, which would feel like the action
     plugin output belongs to the previous task.
 
     In order to flush the output on these scenarios, a plugin needs to write a
-    file to a location where the ``cleanstdout`` plugin is observing. At this
-    point, the Callback plugin will flush any outstanding text, and the other
-    plugin can proceed with its own task.
+    file to a location where the ``beautiful_output`` plugin is observing. At
+    this point, the Callback plugin will flush any outstanding text, and the
+    other plugin can proceed with its own task.
 
     Args:
         display (:obj:`ansible.utils.display.Display`, optional): Holds the
@@ -308,8 +305,8 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         CALLBACK_TYPE (:obj:`str`): The type of callback this plugin is
             implementing.
         CALLBACK_NAME (:obj:`str`): The name of this plugin.
-        BUS_DIR (:obj:`str`): The path where the ``cleanstdout`` plugin will
-            observe for files to trigger a flush.
+        BUS_DIR (:obj:`str`): The path where the ``beautiful_stdout`` plugin
+            will observe for files to trigger a flush.
         delegated_vars (:obj:`dict` of :obj:`str` to :obj:`str`): This
             dictionaire is used to store the variables used by a task when it
             delegated to a different host. Mostly, we only need to know the
@@ -349,8 +346,8 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
 
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = "stdout"
-    CALLBACK_NAME = "cleanstdout"
-    BUS_DIR = "%s/clean-stdout-bus" % C.DEFAULT_LOCAL_TMP
+    CALLBACK_NAME = "beautiful_output"
+    BUS_DIR = "%s/beautiful-output-bus" % C.DEFAULT_LOCAL_TMP
 
     def __init__(self, display=None):
         CallbackBase.__init__(self, display)
@@ -617,7 +614,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             return
 
         self._preprocess_result(result)
-        msg, display_color = self.changed_artifacts(result, "ok", C.COLOR_OK)
+        msg, display_color = CallbackModule.changed_artifacts(result, "ok", C.COLOR_OK)
         task_result = self._process_result_output(result, msg, symbol("success"))
         self.display(task_result, display_color)
 
@@ -665,6 +662,9 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             method from the :class:`~ansible.plugins.callback.CallbackBase`
             class.
         """
+        if self._item_processed:
+            return
+
         self._preprocess_result(result)
         status = "ignored" if ignore_errors else "failed"
         color = C.COLOR_SKIP if ignore_errors else C.COLOR_ERROR
@@ -712,7 +712,9 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             class.
         """
         self._preprocess_result(result)
-        status, display_color = self.changed_artifacts(result, "ok", C.COLOR_OK)
+        status, display_color = CallbackModule.changed_artifacts(
+            result, "ok", C.COLOR_OK
+        )
         task_result = self._process_item_result_output(
             result, status, symbol("success")
         )
@@ -869,8 +871,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         """
         result = {} if not result else result._result
         return (
-            self._display.verbosity >= verbosity
-            or "_ansible_verbose_always" in result
+            self._display.verbosity >= verbosity or "_ansible_verbose_always" in result
         ) and "_ansible_verbose_override" not in result
 
     def _display_cli_arguments(self, indent=2):
@@ -1030,7 +1031,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             )
         return task_host
 
-    def _process_result_output(self, result, status, symbol="", indent=2):
+    def _process_result_output(self, result, status, symbol_char="", indent=2):
         """Returns the result converted to string.
 
         Each key in the ``result._result`` is considered a session for the
@@ -1049,8 +1050,8 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
                 object representing the execution of a task.
             status (:obj:`str`): The status representing this ourput (e.g. "ok",
                 "changed", "failed").
-            symbol (:obj:`str`, optional): An UTF-8 character to be used as a
-                symbol in the beginning of the output. Defaults to "".
+            symbol_char (:obj:`str`, optional): An UTF-8 character to be used as
+                a symbol_char in the beginning of the output. Defaults to "".
             indent (int, optional): How many character the text generated from
                 the ``result`` should be indended to. Defaults to 2.
         
@@ -1060,7 +1061,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         task_host = self._get_host_string(result)
 
         task_result = "{0}{1}{2} [{3}]".format(
-            " " * indent, symbol + " " if symbol else "", task_host, status.upper()
+            " " * indent, symbol_char + " " if symbol_char else "", task_host, status.upper()
         )
 
         for key, verbosity in _session_order.items():
@@ -1081,7 +1082,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
 
         return task_result
 
-    def _process_item_result_output(self, result, status, symbol="", indent=2):
+    def _process_item_result_output(self, result, status, symbol_char="", indent=2):
         """Displays the given ``result`` of an item task.
 
         This method is a simplified version of the
@@ -1092,8 +1093,8 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
                 object representing the execution of a task.
             status (:obj:`str`): The status representing this ourput (e.g. "ok",
                 "changed", "failed").
-            symbol (:obj:`str`, optional): An UTF-8 character to be used as a
-                symbol in the beginning of the output. Defaults to "".
+            symbol_char (:obj:`str`, optional): An UTF-8 character to be used as
+                a symbol_char in the beginning of the output. Defaults to "".
             indent (int, optional): How many character the text generated from
                 the ``result`` should be indended to. Defaults to 2.
         
@@ -1109,26 +1110,26 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             item_name = item_name.get("name", item_name)
         task_host = self._get_host_string(result, "@")
         task_result = "{0}{1} {2} ({3}) [{4}]".format(
-            " " * (indent + 2), symbol, item_name, task_host, status.upper()
+            " " * (indent + 2), symbol_char, item_name, task_host, status.upper()
         )
         return task_result
 
-    def _display_summary_table_separator(self, symbol):
+    def _display_summary_table_separator(self, symbol_char):
         """Displays a line separating header or footer from content on the
         summary table.
         
         Args:
-            symbol (:obj:`str`): The character to be used as the separator.
+            symbol_char (:obj:`str`): The character to be used as the separator.
         """
         self.display(
             " {0} {1} {2} {3} {4} {5} {6}".format(
-                symbol * 30,
-                symbol * 7,
-                symbol * 7,
-                symbol * 7,
-                symbol * 7,
-                symbol * 7,
-                symbol * 7,
+                symbol_char * 30,
+                symbol_char * 7,
+                symbol_char * 7,
+                symbol_char * 7,
+                symbol_char * 7,
+                symbol_char * 7,
+                symbol_char * 7,
             )
         )
 
@@ -1164,7 +1165,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         self.display(
             " {0} {1} {2} {3} {4} {5} {6}".format(
                 stringtruncate(host[0], host[1], host[2]),
-                stringtruncate(success[0], success[1], host[2]),
+                stringtruncate(success[0], success[1], success[2]),
                 stringtruncate(changed[0], changed[1], changed[2]),
                 stringtruncate(dark[0], dark[1], dark[2]),
                 stringtruncate(failed[0], failed[1], failed[2]),
