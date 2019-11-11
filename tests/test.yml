@@ -3,7 +3,7 @@
   remote_user: root
 
   roles:
-     - role: townk.beautiful_output
+     - role: ansible-beautiful-output
 
   tasks:
     - name: Simple test task
