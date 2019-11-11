@@ -1,0 +1,10 @@
+---
+- hosts: servers
+  remote_user: root
+
+  roles:
+     - role: townk.beautiful_output
+
+  tasks:
+    - name: Simple test task
+      msg: Task executed!
