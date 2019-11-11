@@ -16,6 +16,14 @@ me is not necessarilly good for you.
 The control machine has to have the `watchdog` python libraries installed prior
 of running your playbook with this callback setup.
 
+You can install it using pip:
+
+```sh
+$ pip install watchdog
+```
+
+Or add it to your `requirements.txt` file.
+
 ## Dependencies
 No dependency to any other Role.
 

@@ -183,7 +183,12 @@ def iscollection(obj):
 
 
 def stringtruncate(
-    value, color=None, width=0, justfn=None, fillchar=" ", truncate_placeholder="[...]"
+    value,
+    color="normal",
+    width=0,
+    justfn=None,
+    fillchar=" ",
+    truncate_placeholder="[...]",
 ):
     """Truncates a giving string using the configuration passed as arguments to
     this function.
@@ -848,7 +853,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
 
                 error = result["exception"].strip().split("\n")[-1]
                 msg += "To see the full traceback, use -vvv. The error was: %s" % error
-            else:
+            elif "module_stderr" in result:
                 if result["exception"] != result["module_stderr"]:
                     msg = "The full traceback is:\n" + result["exception"]
                 del result["exception"]
@@ -1061,7 +1066,10 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         task_host = self._get_host_string(result)
 
         task_result = "{0}{1}{2} [{3}]".format(
-            " " * indent, symbol_char + " " if symbol_char else "", task_host, status.upper()
+            " " * indent,
+            symbol_char + " " if symbol_char else "",
+            task_host,
+            status.upper(),
         )
 
         for key, verbosity in _session_order.items():
@@ -1077,7 +1085,9 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         for title, text in result._result.items():
             if title not in _session_title and text and self._is_run_verbose(result, 2):
                 task_result += self.reindent_session(
-                    title.replace("_", " ").capitalize(), text, indent + 2
+                    title.replace("_", " ").replace(".", " ").capitalize(),
+                    text,
+                    indent + 2,
                 )
 
         return task_result
@@ -1107,7 +1117,16 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
 
         item_name = self._get_item_label(result._result)
         if isinstance(item_name, dict):
-            item_name = item_name.get("name", item_name)
+            if "name" in item_name:
+                item_name = item_name.get("name")
+            elif "path" in item_name:
+                item_name = item_name.get("path")
+            else:
+                item_name = 'JSON: "{0}"'.format(
+                    stringtruncate(
+                        json.dumps(item_name, separators=(",", ":")), width=36
+                    )
+                )
         task_host = self._get_host_string(result, "@")
         task_result = "{0}{1} {2} ({3}) [{4}]".format(
             " " * (indent + 2), symbol_char, item_name, task_host, status.upper()
