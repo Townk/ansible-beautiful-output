@@ -4,7 +4,7 @@
 This role ships with a callback plugin to allow you to display the execution of
 your playbook on a very beautiful way (in my opinion.)
 
-![Screenshot](meta/screenshot.png "Standard output for the beautiful output callback plugin")
+![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot.png "Standard output for the beautiful output callback plugin")
 
 I was always obsessed about the looks of my terminal, and when I started using
 Ansible, there was no Callback available that looked good enough for my taste.
@@ -53,10 +53,10 @@ role on the playbook file:
 ## Screenshots
 
 ### Failure
-![Screenshot](meta/screenshot_failure.png "Failed output for the beautiful output callback plugin")
+![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot_failure.png "Failed output for the beautiful output callback plugin")
 
 ### Detail of a varbose failure
-![Screenshot](meta/screenshot_failure_verbose.png "Details on failure when using the options -vvv")
+![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot_failure_verbose.png "Details on failure when using the options -vvv")
 
 ## License
 
