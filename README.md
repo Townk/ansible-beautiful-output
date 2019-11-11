@@ -1,3 +1,5 @@
+![Build Status](https://api.travis-ci.com/Townk/ansible-beautiful-output.svg?branch=master)
+
 # Beautiful Output
 This role ships with a callback plugin to allow you to display the execution of
 your playbook on a very beautiful way (in my opinion.)
