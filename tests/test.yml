@@ -7,4 +7,5 @@
 
   tasks:
     - name: Simple test task
-      msg: Task executed!
+      debug:
+        msg: Task executed!
