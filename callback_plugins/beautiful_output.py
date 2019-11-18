@@ -69,7 +69,7 @@ import yaml
 from ansible import constants as C
 from ansible import context
 from ansible.executor.task_result import TaskResult
-from ansible.module_utils._text import to_text
+from ansible.module_utils._text import to_text, to_bytes
 from ansible.module_utils.common._collections_compat import Mapping
 from ansible.parsing.utils.yaml import from_yaml
 from ansible.plugins.callback import CallbackBase
@@ -78,23 +78,26 @@ from ansible.utils.color import colorize, hostcolor, stringc
 from ansible.vars.clean import strip_internal_keys, module_response_deepcopy
 from ansible.vars.hostvars import HostVarsVars
 from collections import OrderedDict
-from collections.abc import Sequence
+try:
+    from collections.abc import Sequence
+except:
+    from collections import Sequence
 from numbers import Number
 from os.path import basename, isdir
 from watchdog.observers.fsevents2 import FSEventsObserver2 as Observer
 from watchdog.events import FileSystemEventHandler, EVENT_TYPE_CREATED
 
 _symbol = {
-    "success": "✔",
-    "warning": "⚠",
-    "failure": "✘",
-    "dead": "✝",
-    "yaml": "🅨",
-    "retry": "️↻",
-    "loop": "∑",
-    "arrow_right": "➞",
-    "skip": "⤼",
-    "flag": "⚑",
+    "success": to_text("✔"),
+    "warning": to_text("⚠"),
+    "failure": to_text("✘"),
+    "dead": to_text("✝"),
+    "yaml": to_text("🅨"),
+    "retry": to_text("️↻"),
+    "loop": to_text("∑"),
+    "arrow_right": to_text("➞"),
+    "skip": to_text("⤼"),
+    "flag": to_text("⚑"),
 }  # type: Dict[str,str]
 """:obj:`dict` of :obj:`str` to :obj:`str`: A dictionary of symbols to be used
 when the Callback needs to display a symbol on the screen.
@@ -163,7 +166,7 @@ def symbol(key, color=None):  # type: (str, str) -> str
         :obj:`str`: A unicode character representing a symbol for the given
         ``key``.
     """
-    output = _symbol.get(key, ":{0}:".format(key))
+    output = _symbol.get(key, to_text(":{0}:").format(key))
     if not color:
         return output
     return stringc(output, color)
@@ -179,7 +182,7 @@ def iscollection(obj):
     Returns:
         bool: True if the object is a collection and False otherwise.
     """
-    return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))
+    return isinstance(obj, Sequence) and not isinstance(obj, basestring)
 
 
 def stringtruncate(
@@ -220,19 +223,19 @@ def stringtruncate(
         justfn = str.rjust if isinstance(value, int) else str.ljust
 
     if isinstance(value, int):
-        value = "{:n}".format(value)
+        value = to_text("{:n}").format(value)
 
     truncsize = len(truncate_placeholder)
     do_not_trucate = len(value) <= width or width == 0
     truncated_width = width - truncsize
 
     return stringc(
-        justfn(value, width)
+        to_text(justfn(to_bytes(value), width))
         if do_not_trucate
-        else "{0}{1}".format(
+        else to_text("{0}{1}".format(
             value[:truncated_width] if justfn == str.ljust else truncate_placeholder,
             truncate_placeholder if justfn == str.ljust else value[truncated_width:],
-        ),
+        )),
         color,
     )
 
@@ -417,8 +420,8 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             method from the :class:`~ansible.plugins.callback.CallbackBase`
             class.
         """
-        playbook_name = "{0} {1}".format(
-            symbol("yaml", C.COLOR_HIGHLIGHT),
+        playbook_name = to_text("{0} {1}").format(
+            symbol(to_text("yaml"), C.COLOR_HIGHLIGHT),
             stringc(basename(playbook._file_name), C.COLOR_HIGHLIGHT),
         )
         if (
@@ -427,16 +430,16 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             and not self._is_run_verbose(verbosity=3)
             and not C.DISPLAY_ARGS_TO_STDOUT
         ):
-            playbook_name = "{0} (check mode)".format(playbook_name)
+            playbook_name = to_text("{0} (check mode)").format(playbook_name)
 
-        self.display("\nExecuting playbook {0}".format(playbook_name))
+        self.display(to_text("\nExecuting playbook {0}").format(playbook_name))
 
         # show CLI arguments
         if self._is_run_verbose(verbosity=3) or C.DISPLAY_ARGS_TO_STDOUT:
             self._display_cli_arguments()
         else:
             self._display_tag_strip(playbook)
-        self.display("\n")
+        self.display(to_text("\n"))
 
     def v2_playbook_on_no_hosts_matched(self):
         """Display a warning when there is no hosts available.
@@ -494,7 +497,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         name = play.get_name().strip()
         if name:
             self.display(
-                "[PLAY: {0}]".format(stringc(name, C.COLOR_HIGHLIGHT)).center(91, "-")
+                to_text("[PLAY: {0}]").format(stringc(name, C.COLOR_HIGHLIGHT)).center(91, "-")
             )
         else:
             self.display("[PLAY]".center(80, "-"))
@@ -502,8 +505,8 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         if play.hosts:
             self.display("Hosts:")
             for host in play.hosts:
-                self.display("  - {0}".format(stringc(host, C.COLOR_HIGHLIGHT)))
-            self.display("-" * 80)
+                self.display(to_text("  - {0}").format(stringc(host, C.COLOR_HIGHLIGHT)))
+            self.display(to_text("-") * 80)
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         """Displays a title for the giving ``task`.
@@ -788,7 +791,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             method from the :class:`~ansible.plugins.callback.CallbackBase`
             class.
         """
-        self.display("{0}\n\n".format("-" * 80))
+        self.display(to_text("{0}\n\n").format("-" * 80))
         totals = {
             "ok": 0,
             "changed": 0,
@@ -888,7 +891,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         """
         if context.CLIARGS.get("args"):
             self.display(
-                "{0}Positional arguments: {1}".format(
+                to_text("{0}Positional arguments: {1}").format(
                     " " * indent, ", ".join(context.CLIARGS["args"])
                 ),
                 color=C.COLOR_VERBOSE,
@@ -900,14 +903,14 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             if key != "args" and value
         }.items():
             if iscollection(val):
-                self.display("{0}{1}:".format(" " * indent, arg), color=C.COLOR_VERBOSE)
+                self.display(to_text("{0}{1}:").format(" " * indent, arg), color=C.COLOR_VERBOSE)
                 for v in val:
                     self.display(
-                        "{0}- {1}".format(" " * (indent + 2), v), color=C.COLOR_VERBOSE
+                        to_text("{0}- {1}").format(" " * (indent + 2), v), color=C.COLOR_VERBOSE
                     )
             else:
                 self.display(
-                    "{0}{1}: {2}".format(" " * indent, arg, val), color=C.COLOR_VERBOSE
+                    to_text("{0}{1}: {2}").format(" " * indent, arg, val), color=C.COLOR_VERBOSE
                 )
 
     def _get_tags(self, playbook):
@@ -964,19 +967,19 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         for tag in sorted(tags):
             if not first_item:
                 if total_len + len(tag) + 5 > width:
-                    tag_strings += "\n\n  {0} {1} {2} {3}".format(
+                    tag_strings += to_text("\n\n  {0} {1} {2} {3}").format(
                         "\x1b[6;30;47m", symbol("flag"), tag, "\x1b[0m"
                     )
                     total_len = len(tag) + 6
                     first_item = True
                 else:
-                    tag_strings += " {0} {1} {2} {3}".format(
+                    tag_strings += to_text(" {0} {1} {2} {3}").format(
                         "\x1b[6;30;47m", symbol("flag"), tag, "\x1b[0m"
                     )
                     total_len += len(tag) + 5
             else:
                 first_item = False
-                tag_strings += "  {0} {1} {2} {3}".format(
+                tag_strings += to_text("  {0} {1} {2} {3}").format(
                     "\x1b[6;30;47m", symbol("flag"), tag, "\x1b[0m"
                 )
                 total_len = len(tag) + 6
@@ -1029,9 +1032,9 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         Returns:
             A formatted version of the host that generated the ``result``.
         """
-        task_host = "{0}{1}".format(prefix, result._host.get_name())
+        task_host = to_text("{0}{1}").format(prefix, result._host.get_name())
         if self.delegated_vars:
-            task_host += " {0} {1}{2}".format(
+            task_host += to_text(" {0} {1}{2}").format(
                 symbol("arrow_right"), prefix, self.delegated_vars["ansible_host"]
             )
         return task_host
@@ -1065,7 +1068,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         """
         task_host = self._get_host_string(result)
 
-        task_result = "{0}{1}{2} [{3}]".format(
+        task_result = to_text("{0}{1}{2} [{3}]").format(
             " " * indent,
             symbol_char + " " if symbol_char else "",
             task_host,
@@ -1113,7 +1116,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         """
         if not self._item_processed:
             self._item_processed = True
-            self.display("{0}{1} Items:".format(" " * indent, symbol("loop")))
+            self.display(to_text("{0}{1} Items:").format(" " * indent, symbol("loop")))
 
         item_name = self._get_item_label(result._result)
         if isinstance(item_name, dict):
@@ -1122,13 +1125,13 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             elif "path" in item_name:
                 item_name = item_name.get("path")
             else:
-                item_name = 'JSON: "{0}"'.format(
+                item_name = u'JSON: "{0}"'.format(
                     stringtruncate(
                         json.dumps(item_name, separators=(",", ":")), width=36
                     )
                 )
         task_host = self._get_host_string(result, "@")
-        task_result = "{0}{1} {2} ({3}) [{4}]".format(
+        task_result = to_text("{0}{1} {2} ({3}) [{4}]").format(
             " " * (indent + 2), symbol_char, item_name, task_host, status.upper()
         )
         return task_result
@@ -1141,7 +1144,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             symbol_char (:obj:`str`): The character to be used as the separator.
         """
         self.display(
-            " {0} {1} {2} {3} {4} {5} {6}".format(
+            to_text(" {0} {1} {2} {3} {4} {5} {6}").format(
                 symbol_char * 30,
                 symbol_char * 7,
                 symbol_char * 7,
@@ -1182,7 +1185,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
                 tasks were ignored.
         """
         self.display(
-            " {0} {1} {2} {3} {4} {5} {6}".format(
+            to_text(" {0} {1} {2} {3} {4} {5} {6}").format(
                 stringtruncate(host[0], host[1], host[2]),
                 stringtruncate(success[0], success[1], success[2]),
                 stringtruncate(changed[0], changed[1], changed[2]),
@@ -1370,7 +1373,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
         if textstr.startswith("---") or textstr.startswith("{"):
             dumped = CallbackModule.dump_value(textstr)
             textstr = dumped if dumped else textstr
-        output = "\n{0}{1}:".format(titleindent, title)
+        output = to_text("\n{0}{1}:").format(titleindent, title)
         lines = textstr.splitlines()
 
         if (len(lines) == 1) and (len(textstr) <= textwidth) and (not dumped):
@@ -1447,14 +1450,17 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             values of this dictionary will be shallowed copied to the returned
             dictionary.
         """
-        key, *others = args
-        if key in mapping:
-            value = mapping[key]
-            if others:
-                return CallbackModule.get_chainned_value(value, *others)
-            if isinstance(value, Mapping):
-                dict_value = {}
-                dict_value.update(value)
-                return dict_value
-            return value
+        if args:
+            key = args[0]
+            others = args[1:]
+
+            if key in mapping:
+                value = mapping[key]
+                if others:
+                    return CallbackModule.get_chainned_value(value, *others)
+                if isinstance(value, Mapping):
+                    dict_value = {}
+                    dict_value.update(value)
+                    return dict_value
+                return value
         return None
