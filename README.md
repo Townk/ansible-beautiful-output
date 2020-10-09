@@ -55,7 +55,7 @@ role on the playbook file:
 ### Failure
 ![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot_failure.png "Failed output for the beautiful output callback plugin")
 
-### Detail of a varbose failure
+### Detail of a verbose failure
 ![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot_failure_verbose.png "Details on failure when using the options -vvv")
 
 ## License
