@@ -2,7 +2,7 @@
 
 # Beautiful Output
 This role ships with a callback plugin to allow you to display the execution of
-your playbook on a very beautiful way (in my opinion.)
+your playbook on a beautiful way (in my opinion.)
 
 ![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot.png "Standard output for the beautiful output callback plugin")
 
@@ -11,8 +11,8 @@ Ansible, there was no Callback available that looked good enough for my taste.
 Faced with such scenario, I spent some time to create this plugin to satisfy my
 _"beautiful terminal"_ goal with Ansible.
 
-Is worth notice that taste is a very subjective point, and what looks good for
-me is not necessarilly good for you.
+It is worth notice that taste is a subjective point, and what looks good for
+me is not necessarily good for you.
 
 ## Requirements
 The control machine has to have the `watchdog` python libraries installed prior
@@ -26,11 +26,17 @@ $ pip install watchdog
 
 Or add it to your `requirements.txt` file.
 
+If you're running this on a macOS, `watchdog` requires the package `AppKit` installed, but do not install it directly, add the `PyObjC` and `PyObjC-core` packages instead:
+
+``` sh
+$ pip install PyObjC PyObjC-core
+```
+
 ## Dependencies
 No dependency to any other Role.
 
 ## How to use it
-First let Ansible know that you will use the plugin as an stdout pluguin on your
+First let Ansible know that you will use the plugin as an `stdout_callback` plugin on your
 `ansible.cfg` file:
 
 ```ini
@@ -81,7 +87,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-## About the author
-My real name is Thiago Alves and I'm an old-school software engineer trying to
-keep up with the cool kids' toys of these days.
