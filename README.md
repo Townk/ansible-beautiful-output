@@ -2,7 +2,7 @@
 
 # Beautiful Output
 This role ships with a callback plugin to allow you to display the execution of
-your playbook on a beautiful way (in my opinion.)
+your playbook in a beautiful way (in my opinion.)
 
 ![Screenshot](https://raw.githubusercontent.com/Townk/ansible-beautiful-output/master/meta/screenshot.png "Standard output for the beautiful output callback plugin")
 
@@ -36,7 +36,7 @@ $ pip install PyObjC PyObjC-core
 No dependency to any other Role.
 
 ## How to use it
-First let Ansible know that you will use the plugin as an `stdout_callback` plugin on your
+First, let Ansible know that you will use the plugin as an `stdout_callback` plugin on your
 `ansible.cfg` file:
 
 ```ini
@@ -47,7 +47,7 @@ stdout_callback = beautiful_output
 bin_ansible_callbacks = True
 ```
 
-Than, for each playbook you want running with this callback plugin, add the
+Then, for each playbook you want running with this callback plugin, add the
 role on the playbook file:
 
 ```yaml
